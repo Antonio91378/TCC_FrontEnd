@@ -5,6 +5,7 @@ import { ensureChartRegistered } from '@/lib/chart';
 import type { PlantSample, PlantVars } from '@/types/plant';
 import { z } from 'zod';
 import type { ChartData, ChartOptions } from 'chart.js';
+import styles from './dashboard.module.css';
 
 // Firebase imports lazily to avoid SSR issues when not used
 let firebaseLoaded = false as boolean;
@@ -171,16 +172,17 @@ export default function Dashboard() {
   }), []);
 
   return (
-    <div style={{ display: 'grid', gap: 16 }}>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+    <div className={styles.root}>
+      <div className={styles.toolbar}>
         <strong>Fonte:</strong>
-        <button onClick={() => setSource('firebase')} disabled={source==='firebase'}>Firebase</button>
-  <button onClick={() => setSource('opcua')} disabled={source==='opcua'}>OPC UA direto</button>
-  <button onClick={() => setSource('mock')} disabled={source==='mock'}>Mock</button>
-        <span aria-hidden style={{ width: 1, height: 24, borderLeft: '1px solid #333', margin: '0 8px' }} />
+        <div className={styles.segment}>
+          <button className={styles.segBtn} onClick={() => setSource('firebase')} disabled={source==='firebase'}>Firebase</button>
+          <button className={styles.segBtn} onClick={() => setSource('opcua')} disabled={source==='opcua'}>OPC UA direto</button>
+          <button className={styles.segBtn} onClick={() => setSource('mock')} disabled={source==='mock'}>Mock</button>
+        </div>
+        <span aria-hidden className={styles.spacer} />
         <button
           onClick={() => {
-            // Clear all data and force reset of data source and chart
             setSamples([]);
             setLatest(null);
             setResetKey((k) => k + 1);
@@ -189,20 +191,18 @@ export default function Dashboard() {
         >
           Limpar
         </button>
-        <span style={{ marginLeft: 'auto', opacity: 0.7 }}>amostras: {samples.length}</span>
+        <span className={styles.counter}>amostras: {samples.length}</span>
       </div>
 
-      <div style={{ background: '#111', padding: 12, borderRadius: 8 }}>
+      <div className={styles.panel}>
         <Line key={resetKey} data={data} options={options} height={80} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(120px,1fr))', gap: 12 }}>
-    {(['pv','sp','mv','cv','error','status'] as const).map((k) => (
-          <div key={k} style={{ border: '1px solid #333', borderRadius: 8, padding: 12 }}>
-            <div style={{ fontSize: 12, opacity: 0.7 }}>{k.toUpperCase()}</div>
-            <div style={{ fontSize: 20 }}>
-      {latest?.[k] ?? '—'}
-            </div>
+      <div className={styles.grid}>
+        {(['pv','sp','mv','cv','error','status'] as const).map((k) => (
+          <div key={k} className={styles.card}>
+            <div className={styles.label}>{k.toUpperCase()}</div>
+            <div className={styles.value}>{latest?.[k] ?? '—'}</div>
           </div>
         ))}
       </div>

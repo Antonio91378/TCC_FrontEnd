@@ -1,0 +1,71 @@
+:root {
+  --panel: rgba(18, 18, 22, 0.85);
+  --border: #2a2a2e;
+  --text: #e5e7eb;
+}
+
+.root {
+  display: grid;
+  gap: 16px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.spacer {
+  width: 1px;
+  height: 24px;
+  border-left: 1px solid var(--border);
+  margin: 0 8px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.label { font-size: 12px; opacity: 0.7; color: var(--text); }
+.value { font-size: 20px; color: var(--text); }
+
+.segment {
+  display: inline-flex;
+  background: rgba(20,20,24,0.6);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 2px;
+}
+.segBtn {
+  appearance: none;
+  background: transparent;
+  color: var(--text);
+  border: 0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.segBtn[disabled] {
+  background: #151518;
+  color: #bfc3c9;
+  cursor: default;
+}
+
+.counter { margin-left: auto; opacity: .7; color: var(--text); }
