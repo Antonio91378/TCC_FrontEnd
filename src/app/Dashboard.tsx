@@ -106,10 +106,10 @@ export default function Dashboard() {
         let sp = 50;
         let mv = 0;
         let cv = 0;
-        let status = 'MOCK';
+  const status = 'MOCK';
         const dt = 1.0; // seconds
         const tau = 5.0; // time constant
-        let t0 = Date.now();
+  const t0 = Date.now();
         const tick = () => {
           const now = Date.now();
           const seconds = Math.floor((now - t0) / 1000);
