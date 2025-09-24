@@ -90,6 +90,15 @@ export default function SignalPage() {
 
   const checked = value === true;
 
+  const canToggle = (source === "firebase" || source === "opcua") && value !== null && !sending;
+
+  async function handleToggle() {
+    if (!canToggle) return;
+    const next = !checked;
+    if (source === 'firebase') return sendFirebaseCommand(next);
+    if (source === 'opcua') return sendOpcUaCommand(next);
+  }
+
   async function sendFirebaseCommand(next: boolean) {
     try {
       setSending(true);
@@ -162,31 +171,39 @@ export default function SignalPage() {
 
       <div className={styles.panel}>
         <div className={styles.switchRow}>
-          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 12 }}>
-            <span className={`${styles.switch} ${checked ? styles.on : ''}`}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12 }}>
+            <span
+              role="switch"
+              aria-checked={checked}
+              aria-busy={sending || undefined}
+              aria-disabled={!canToggle || undefined}
+              tabIndex={canToggle ? 0 : -1}
+              className={`${styles.switch} ${checked ? styles.on : ''} ${canToggle ? styles.switchClickable : styles.switchDisabled}`}
+              onClick={handleToggle}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleToggle(); } }}
+              title={
+                source === 'mock'
+                  ? 'Somente leitura no modo Mock'
+                  : value === null
+                    ? 'Aguardando leitura…'
+                    : 'Clique para alternar'
+              }
+            >
               <span className={styles.knob} />
             </span>
             <input type="checkbox" checked={checked} readOnly style={{ display: 'none' }} />
-            <span className={styles.stateLabel}>{checked ? "Ligado" : value === null ? "Aguarde…" : "Desligado"}</span>
-          </label>
+            <span className={styles.stateLabel}>
+              {sending ? 'Enviando…' : checked ? 'Ligado' : value === null ? 'Aguarde…' : 'Desligado'}
+            </span>
+          </div>
 
-          {(source === "firebase" || source === "opcua") && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <button
-                className={styles.primaryBtn}
-                onClick={() => (source === 'firebase' ? sendFirebaseCommand(!checked) : sendOpcUaCommand(!checked))}
-                disabled={sending}
-                title="Enviar comando para alternar o estado"
-              >
-                {sending ? "Enviando…" : checked ? "Desligar" : "Ligar"}
-              </button>
-              <span className={styles.hint}>
-                {source === 'firebase'
-                  ? `(envia para ${process.env.NEXT_PUBLIC_BOOL_FIREBASE_CMD_PATH || 'bool_cmd'})`
-                  : `(OPC UA: ${process.env.NEXT_PUBLIC_BOOL_OPCUA_NODE_ID || 'nodeId?'})`}
-              </span>
-            </div>
-          )}
+          <span className={styles.hint}>
+            {source === 'firebase'
+              ? `Clique no toggle para enviar (${process.env.NEXT_PUBLIC_BOOL_FIREBASE_CMD_PATH || 'bool_cmd'})`
+              : source === 'opcua'
+                ? `Clique no toggle para enviar (OPC UA: ${process.env.NEXT_PUBLIC_BOOL_OPCUA_NODE_ID || 'nodeId?'})`
+                : 'Modo Mock: o valor alterna automaticamente'}
+          </span>
         </div>
       </div>
 
