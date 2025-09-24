@@ -11,6 +11,12 @@
   <style>
     html, body { margin:0; padding:0; background:#0b0b0e; }
     body, .wrapper{ font-family: "Geist", Arial, Helvetica, sans-serif; }
+    /* Custom Scrollbar (Dark) */
+    html, body { scrollbar-width: thin; scrollbar-color: #2f343b #0b0b0e; }
+    html::-webkit-scrollbar, body::-webkit-scrollbar { width:10px; height:10px; }
+    html::-webkit-scrollbar-track, body::-webkit-scrollbar-track { background:#0b0b0e; }
+    html::-webkit-scrollbar-thumb, body::-webkit-scrollbar-thumb { background:linear-gradient(180deg,#2a2f38,#1d2025); border-radius:8px; border:2px solid #0b0b0e; }
+    html::-webkit-scrollbar-thumb:hover, body::-webkit-scrollbar-thumb:hover { background:linear-gradient(180deg,#3b4350,#262a30); }
   </style>
 </head>
 <body>

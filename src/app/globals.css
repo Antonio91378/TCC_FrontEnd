@@ -25,6 +25,45 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* === Custom Scrollbar (Dark Theme) === */
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2f343b #0b0b0e;
+}
+/* WebKit */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: #0b0b0e;
+}
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg,#2a2f38,#1d2025);
+  border-radius: 8px;
+  border: 2px solid #0b0b0e; /* creates gap / padding illusion */
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg,#3b4350,#262a30);
+}
+*::-webkit-scrollbar-corner { background: #0b0b0e; }
+
+@media (prefers-color-scheme: light) {
+  * {
+    scrollbar-color: #c5c9d0 #f1f3f5;
+  }
+  *::-webkit-scrollbar-track { background: #f1f3f5; }
+  *::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg,#c2c7ce,#9fa4ac);
+    border: 2px solid #f1f3f5;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg,#b4b9c1,#8e949c);
+  }
+  *::-webkit-scrollbar-corner { background: #f1f3f5; }
+}
+
 * {
   box-sizing: border-box;
   padding: 0;
