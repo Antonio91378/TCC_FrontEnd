@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SetPoint (Static)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../signal_static/styles.css" />
+  <style>
+    html, body { margin:0; padding:0; background:#0b0b0e; }
+    body, .wrapper{ font-family: "Geist", Arial, Helvetica, sans-serif; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="wrapper">
+      <h1 class="title">SetPoint</h1>
+      <div class="toolbar">
+        <strong>Fonte:</strong>
+        <div class="segment">
+          <button class="segBtn" id="btnBridge" title="Inicia a ponte JS ⇄ C#">Ponte C#</button>
+          <button class="segBtn" id="btnMock">Mock</button>
+        </div>
+        <span class="hint">Ponte C#: mensagens JS ⇄ C#</span>
+        <span aria-hidden class="spacer"></span>
+        <span class="time" id="time">—</span>
+      </div>
+
+      <div class="panel">
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap">
+          <label>
+            <span style="font-size:12px; opacity:.75">Novo SP</span><br>
+            <input id="inputSp" type="number" inputmode="decimal" step="0.1" value="" style="padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:#0d0f13; color:white; min-width:160px" />
+          </label>
+          <button class="primaryBtn" id="btnApply" disabled>Aplicar</button>
+          <span class="hint" id="hint">Selecione uma fonte</span>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="label">SP atual</div>
+          <div class="value" id="valueBox">—</div>
+        </div>
+        <div class="card">
+          <div class="label">Fonte</div>
+          <div class="value" id="sourceBox">—</div>
+        </div>
+      </div>
+
+      <details style="margin-top:16px; opacity:.85">
+        <summary>Configurações avançadas</summary>
+        <div style="display:grid; gap:8px; margin-top:8px; grid-template-columns:repeat(auto-fit,minmax(240px,1fr));">
+          <label>Firebase path (leitura/escrita)
+            <input id="cfgFirebasePath" type="text" placeholder="sp" />
+          </label>
+          <label>Firebase cmd path (opcional)
+            <input id="cfgFirebaseCmd" type="text" placeholder="sp_cmd" />
+          </label>
+          <label>OPC UA endpoint
+            <input id="cfgEndpoint" type="text" placeholder="opc.tcp://host:4840" />
+          </label>
+          <label>OPC UA nodeId (SP)
+            <input id="cfgNodeId" type="text" placeholder="ns=2;s=SP" />
+          </label>
+          <label>OPC UA poll (ms)
+            <input id="cfgPoll" type="number" placeholder="1000" />
+          </label>
+          <small>Obs.: nas versões estáticas, a comunicação deve ocorrer via ponte C# ⇄ JS (Vuplex). As ações de leitura/escrita enviarão mensagens ao C#.</small>
+        </div>
+      </details>
+    </div>
+  </div>
+  <script src="./vuplex-bridge.js"></script>
+  <script src="./main.js"></script>
+</body>
+</html>

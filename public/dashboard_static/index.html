@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard (Static)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="page">
+    <div class="wrapper">
+      <h1 class="title">Dashboard - Controle de Nível</h1>
+      <div class="toolbar">
+        <strong>Fonte:</strong>
+        <div class="segment">
+          <button class="segBtn" id="btnBridge">Ponte C#</button>
+          <button class="segBtn" id="btnMock">Mock</button>
+        </div>
+        <span aria-hidden class="spacer"></span>
+        <button class="ghostBtn" id="btnLimpar">Limpar</button>
+        <span class="counter" id="counter">amostras: 0</span>
+      </div>
+
+      <div class="panel chartWrapper">
+        <canvas id="chart"></canvas>
+      </div>
+
+      <div class="grid">
+        <div class="card"><div class="label">PV</div><div class="value" id="pv">—</div></div>
+        <div class="card"><div class="label">SP</div><div class="value" id="sp">—</div></div>
+        <div class="card"><div class="label">MV</div><div class="value" id="mv">—</div></div>
+        <div class="card"><div class="label">CV</div><div class="value" id="cv">—</div></div>
+        <div class="card"><div class="label">Erro</div><div class="value" id="error">—</div></div>
+        <div class="card"><div class="label">Status</div><div class="value" id="status">—</div></div>
+      </div>
+
+      <details style="margin-top:16px; opacity:.85">
+        <summary>Configurações avançadas</summary>
+        <div class="cfgGrid">
+          <label>Chave PV <input id="keyPv" type="text" placeholder="pv" /></label>
+          <label>Chave SP <input id="keySp" type="text" placeholder="sp" /></label>
+          <label>Chave MV <input id="keyMv" type="text" placeholder="mv" /></label>
+          <label>Chave CV <input id="keyCv" type="text" placeholder="cv" /></label>
+          <label>Chave Erro <input id="keyErr" type="text" placeholder="error" /></label>
+          <label>Chave Status <input id="keyStatus" type="text" placeholder="status" /></label>
+          <label>Polling (ms) <input id="cfgPoll" type="number" placeholder="1000" /></label>
+          <small>Obs.: a versão estática usa a ponte C# ⇄ JS. O host deve enviar mensagens "valueNumber"/"valueBool"/"valueText" com as chaves configuradas abaixo, ou responder às requisições "read*".</small>
+        </div>
+      </details>
+
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="./vuplex-bridge.js"></script>
+  <script src="./main.js"></script>
+</body>
+</html>

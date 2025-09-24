@@ -12,6 +12,7 @@ Suporta duas fontes de dados:
 1) Firebase Realtime Database (cliente)
 2) Servidor OPC UA (direto, via rota de API no servidor Next)
 3) Mock (para teste)
+ 4) Ponte C# (para versões estáticas): comunicação via mensagens JS ⇄ C#
 
 ## 1) Requisitos
 - Node.js 18+ recomendado
@@ -61,6 +62,14 @@ Acesse: http://localhost:3000
 
 No topo da página, você pode alternar entre as fontes “Firebase” e “OPC UA direto”.
 
+### Aba de Configurações Avançadas (obrigatória em toda interface)
+Toda interface (tela/página) criada neste projeto deve conter uma aba ou seção de “Configurações avançadas” para ajuste de detalhes de comunicação e comportamento. Itens recomendados:
+- Firebase: caminho de leitura (ex.: `plant`, `bool`) e caminho de comando/escrita (ex.: `bool_cmd`).
+- OPC UA: endpoint (ex.: `opc.tcp://host:4840`), NodeId(s) relevantes (ex.: `ns=2;s=BOOL`) e período de polling em milissegundos.
+- Observações sobre limitações: quando a função depender de backend (como `/api/opcua`) e não estiver disponível em ambiente estático, a UI deve informar e desabilitar a ação conforme necessário.
+
+Se existir versão estática da tela (ex.: `public/signal_static/`), essa aba de configurações também deve ser replicada nela, mantendo consistência visual e funcional com a versão Next.js.
+
 ## 4) Estrutura principal
 - `src/app/Dashboard.tsx`: UI do dashboard, gráfico e cartões de valores
 - `src/app/api/opcua/route.ts`: rota de API que lê do servidor OPC UA usando `node-opcua`
@@ -68,6 +77,7 @@ No topo da página, você pode alternar entre as fontes “Firebase” e “OPC 
 - `src/lib/chart.ts`: registro do Chart.js e adaptor de datas
 - `src/types/plant.ts`: tipos das variáveis da planta
  - `src/app/signal/page.tsx`: página de um único sinal booleano com seleção de fonte
+ - `src/app/setpoint/page.tsx`: página de setpoint numérico com leitura e escrita
 
 ## 5) Observações
 - O acesso OPC UA roda no runtime Node do Next (server). Ajuste firewalls/ACLs.
@@ -158,3 +168,23 @@ Checklist rápido:
  - [ ] Variáveis do Firebase e/ou OPC UA preenchidas
  - [ ] `Config.h` criado a partir de `Config.sample.h` no projeto Arduino
  - [ ] Nada sensível sendo comitado (Git deve ignorar)
+
+---
+
+## 8) Versões estáticas e ponte JS ⇄ C# (Vuplex)
+
+As versões estáticas em `public/*_static/` SEMPRE se comunicam exclusivamente via ponte com C# (ex.: Unity + Vuplex WebView), usando mensagens JSON. Elas não acessam diretamente Firebase nem OPC UA:
+
+Pastas:
+- `public/signal_static/` → `index.html`, `main.js`, `vuplex-bridge.js`
+- `public/setpoint_static/` → `index.html`, `main.js`, `vuplex-bridge.js`
+
+Resumo do protocolo:
+- JS → C#: `readBool` | `writeBool` | `readNumber` | `writeNumber` com payload `{ key, value? }`
+- C# → JS: `valueBool` | `valueNumber` com payload `{ key, value, t? }`
+
+Responsabilidades do host (C#):
+- Processar mensagens vindas do JS, executar IO (Firebase/OPC UA etc.) e responder com `value*`.
+- Pode enviar atualizações periódicas (push) ou o JS solicitar com `read*` em intervalo configurável (polling).
+
+Obrigatório: toda página estática deve incluir a aba de “Configurações avançadas” e utilizar a ponte JS ⇄ C# para a comunicação.

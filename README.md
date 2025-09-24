@@ -5,11 +5,13 @@ Real-time dashboard to visualize variables from a didactic level-control plant a
 ### Routes
 - `/` Main dashboard (PV, SP, MV, CV, error, status)
 - `/signal` Boolean signal page with a styled checkbox that mirrors a boolean value
+- `/setpoint` Numeric setpoint page to read/write SP
 
 ### Data sources
 - Firebase Realtime Database (client-side)
 - OPC UA server (via Next API route)
 - Mock (for testing)
+- C# bridge (static pages only): static UIs communicate via JS ⇄ C# messages
 
 ### Environment variables
 General (dashboard): see `README_PORTUGUES.md` for detailed list
@@ -27,6 +29,36 @@ Boolean signal (/signal):
 - Dev: `npm run dev`
 - Build: `npm run build`; Start: `npm start`
 - Visit: http://localhost:3000 and http://localhost:3000/signal
+
+### Nota importante — Manter versão estática em sincronia
+Este repositório possui um clone estático da tela `/signal` em `public/signal_static/` (HTML/CSS/JS puro) para visualização sem Next.js.
+
+ATENÇÃO: Sempre que houver qualquer mudança visual ou comportamental na página `/signal` (estilos, textos, layout ou lógica do toggle), a mesma alteração deve ser replicada na versão estática, mantendo consistência entre:
+- App Next.js: `src/app/signal/page.tsx` e `src/app/signal/signal.module.css`
+- Versão estática: `public/signal_static/index.html`, `public/signal_static/styles.css`, `public/signal_static/main.js`
+
+Caso a IA esteja realizando alterações: antes de concluir a tarefa, verifique e espelhe as alterações correspondentes nos arquivos da versão estática. Se um recurso não for aplicável no ambiente estático (por exemplo, `/api/opcua` em hospedagem estática), documente a limitação no comentário do commit e ajuste a UI (desabilitar botão, alterar dica) quando apropriado.
+
+### Aba de Configurações Avançadas (obrigatória em toda interface)
+Toda interface (tela/página) criada neste projeto deve incluir uma seção de “Configurações avançadas” para parametrização de comunicação e comportamento em tempo de execução. Padrões recomendados:
+- Firebase: caminho de leitura (ex.: `bool`, `plant`), caminho de comando/escrita (ex.: `bool_cmd`).
+- OPC UA: endpoint (ex.: `opc.tcp://host:4840`), NodeId(s) relevantes (ex.: `ns=2;s=BOOL`), e intervalo de polling (ms).
+- Dicas e limitações: quando não houver backend disponível (ex.: hospedagem estática), informar e desabilitar recursos indisponíveis.
+
+Para a IA: sempre que criar ou alterar uma UI, inclua/atualize essa aba de Configurações na tela correspondente e, se houver versão estática, replique a mesma seção em `public/<nome>_static/`.
+
+### Páginas estáticas e ponte JS ⇄ C# (Vuplex)
+As versões estáticas em `public/*_static/` SEMPRE se comunicam exclusivamente via ponte com C# (por exemplo, Unity + Vuplex WebView), usando mensagens JSON. Elas não acessam diretamente Firebase nem OPC UA. Exemplo de pastas:
+- `public/signal_static/` → `index.html`, `main.js`, `vuplex-bridge.js`
+- `public/setpoint_static/` → `index.html`, `main.js`, `vuplex-bridge.js`
+
+Esquema de mensagens (resumo):
+- JS → C#: `readBool` | `writeBool` | `readNumber` | `writeNumber` com payload `{ key, value? }`
+- C# → JS: `valueBool` | `valueNumber` com payload `{ key, value, t? }`
+
+O app host (C#) deve:
+- Interceptar mensagens JS, fazer IO real (Firebase/OPC UA), e responder com os eventos `value*`.
+- Opcionalmente enviar push periódico, ou JS pode solicitar via `read*` com polling.
 
 ### Recent updates (2025-09-15)
 - Fixed Vercel/ESLint issues:
