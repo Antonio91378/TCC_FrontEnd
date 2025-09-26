@@ -1,8 +1,23 @@
+// Permite que o C# altere a fonte de dados dinamicamente
+window.onApproachChanged = function(approach) {
+  if (approach === "OpcUa") {
+    if (typeof startBridge === "function") startBridge();
+    setApproachIndicator("OPC UA");
+  } else if (approach === "Firebase") {
+    setApproachIndicator("Firebase");
+  } else {
+    if (typeof startMock === "function") startMock();
+    setApproachIndicator("Mock");
+  }
+};
+
+function setApproachIndicator(label) {
+  if (typeof els !== 'undefined' && els.sourceBox) els.sourceBox.textContent = label;
+}
 (function(){
   // Static dashboard using Chart.js and JS ⇄ C# bridge
   const els = {
-    btnBridge: document.getElementById('btnBridge'),
-    btnMock: document.getElementById('btnMock'),
+  // btnBridge e btnMock removidos: fonte de dados agora é controlada pelo StatusManager
     btnLimpar: document.getElementById('btnLimpar'),
     counter: document.getElementById('counter'),
     chartCanvas: document.getElementById('chart'),
@@ -12,6 +27,30 @@
   };
 
   const state = { source: 'bridge', samples: [], timer: null, chart: null };
+
+  // Função global chamada pelo C# via ponte Vuplex
+  window.onFirebaseUpdate = function(path, data) {
+    if (state.source !== 'bridge') return; // Só atualiza se a fonte for ponte C#
+    if (typeof data === "string") {
+      try { data = JSON.parse(data); } catch {}
+    }
+    // Espera-se que data seja um objeto com as chaves pv, sp, mv, cv, error, status, t
+    if (path === "signal" || path === "planta") {
+      const now = data.t || Date.now();
+      const sample = {
+        t: now,
+        pv: Number(data.pv),
+        sp: Number(data.sp),
+        mv: Number(data.mv),
+        cv: Number(data.cv),
+        error: Number(data.error),
+        status: data.status || '',
+      };
+      setLatest(sample);
+      pushSample(sample);
+    }
+  };
+
 
   function fmt(n){ return n == null ? '—' : String(n); }
   function setLatest(v){ els.pv.textContent = fmt(v.pv); els.sp.textContent = fmt(v.sp); els.mv.textContent = fmt(v.mv); els.cv.textContent = fmt(v.cv); els.error.textContent = fmt(v.error); els.status.textContent = v.status ?? '—'; }
@@ -114,8 +153,7 @@
   }
 
   // Wire
-  els.btnMock.addEventListener('click', startMock);
-  els.btnBridge.addEventListener('click', startBridge);
+  // Removido: seleção de fonte de dados agora é feita pelo StatusManager
   els.btnLimpar.addEventListener('click', () => { state.samples = []; setCounter(); if (state.chart) { state.chart.data.labels = []; for (const ds of state.chart.data.datasets) ds.data = []; state.chart.update('none'); } });
 
   // Defaults

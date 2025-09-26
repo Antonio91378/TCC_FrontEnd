@@ -1,3 +1,35 @@
+// Permite que o C# altere a fonte de dados dinamicamente
+window.onApproachChanged = function(approach) {
+  if (approach === "OpcUa") {
+    if (typeof startBridge === "function") startBridge();
+    setApproachIndicator("OPC UA");
+  } else if (approach === "Firebase") {
+    // Apenas responde a window.onFirebaseUpdate
+    setApproachIndicator("Firebase");
+  } else {
+    if (typeof startMock === "function") startMock();
+    setApproachIndicator("Mock");
+  }
+};
+
+function setApproachIndicator(label) {
+  if (typeof els !== 'undefined' && els.sourceBox) els.sourceBox.textContent = label;
+}
+
+
+  // Função global chamada pelo C# via ponte Vuplex
+  window.onFirebaseUpdate = function(path, data) {
+    if (state.source !== 'bridge') return;
+    if (typeof data === "string") {
+      try { data = JSON.parse(data); } catch {}
+    }
+    if (path === "signal") {
+      // Espera-se que data.value seja booleano ou equivalente
+      const v = typeof data.value === 'boolean' ? data.value : (data.value === 1 || data.value === '1' || data.value === 'true');
+      setValue(Boolean(v));
+      setLastUpdate(data.t || Date.now());
+    }
+  };
 (function(){
   /**
    * Versão estática de /signal adaptada para ponte JS ⇄ C# (Vuplex).
@@ -6,8 +38,7 @@
    */
 
   const els = {
-    btnBridge: document.getElementById('btnBridge'),
-    btnMock: document.getElementById('btnMock'),
+  // btnBridge e btnMock removidos: fonte de dados agora é controlada pelo StatusManager
     btnReset: document.getElementById('btnReset'),
     switch: document.getElementById('switch'),
     stateLabel: document.getElementById('stateLabel'),
@@ -42,10 +73,7 @@
   }
 
   function updateToolbar(){
-    // Reaproveitando botões: Firebase=bridge, OPC UA=bridge também, Mock=mock
-  setDisabled(els.btnBridge, state.source === 'bridge');
-    setDisabled(els.btnMock, state.source === 'mock');
-    els.sourceBox.textContent = state.source;
+    // Não faz mais nada: fonte de dados é controlada externamente
   }
 
   function setValue(v){
@@ -162,8 +190,7 @@
   }
 
   // Wire events
-  els.btnMock.addEventListener('click', startMock);
-  els.btnBridge.addEventListener('click', startBridge);
+  // Removido: seleção de fonte de dados agora é feita pelo StatusManager
   els.btnReset.addEventListener('click', () => { reset(); setValue(null); setLastUpdate(null); });
   els.switch.addEventListener('click', onToggle);
   els.switch.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(); }});

@@ -1,4 +1,4 @@
-/*
+        /*
   esp32_signal.ino - ESP32 LED + Firebase RTDB boolean mirror
 
   Features:
@@ -22,6 +22,67 @@
 #include "addons/TokenHelper.h"
 // Provide the RTDB payload printing info and other helper functions.
 #include "addons/RTDBHelper.h"
+
+// ---- Variáveis de integração (mock) ----
+
+// --- Grupo: /planta/ ---
+struct PlantaVars {
+  float pv = 0;
+  float sp = 0;
+  float mv = 0;
+  float cv = 0;
+  float error = 0;
+  String status = "";
+};
+PlantaVars planta;
+
+// --- Grupo: /setpoint/ ---
+struct SetpointVars {
+  float sp = 0;
+};
+SetpointVars setpoint;
+
+// --- Grupo: /signal/ ---
+struct SignalVars {
+  bool boolState = false;
+  bool boolCmd = false;
+};
+SignalVars signal;
+
+// --- Mock update helpers ---
+void updateMockPlanta() {
+  // Simula processo: SP degrau, PV segue com 1a ordem, MV proporcional ao erro
+  static float pv = 20, sp = 50, mv = 0, cv = 0;
+  static unsigned long t0 = millis();
+  float dt = 1.0;
+  float tau = 5.0;
+  unsigned long now = millis();
+  int seconds = (now - t0) / 1000;
+  if (seconds % 15 == 0) sp = 30 + ((seconds / 15) % 3) * 20;
+  float error = sp - pv;
+  mv = 0.8 * error;
+  pv = pv + (-(pv - mv) / tau) * dt + ((float)random(-50, 50)) / 100.0;
+  cv = mv;
+  planta.pv = pv;
+  planta.sp = sp;
+  planta.mv = mv;
+  planta.cv = cv;
+  planta.error = error;
+  planta.status = "MOCK";
+}
+
+void updateMockSetpoint() {
+  // Simples: segue o SP da planta
+  setpoint.sp = planta.sp;
+}
+
+void updateMockSignal() {
+  // Alterna boolState a cada 1.5s, boolCmd a cada 2.5s
+  static unsigned long lastBool = 0, lastCmd = 0;
+  unsigned long now = millis();
+  if (now - lastBool > 1500) { signal.boolState = !signal.boolState; lastBool = now; }
+  if (now - lastCmd > 2500) { signal.boolCmd = !signal.boolCmd; lastCmd = now; }
+}
 
 // ---- Globals ----
 FirebaseData fbdo;
@@ -101,20 +162,27 @@ void initFirebase() {
   }
 }
 
-// Publish current LED state to RTDB
-void publishStateIfDue() {
+// Publica todas as variáveis mock no Firebase
+void publishAllVarsIfDue() {
   const unsigned long now = millis();
   if (now - lastStatePublishMs < STATE_PUBLISH_MS) return;
   lastStatePublishMs = now;
-
   if (!ensureFirebaseReady()) return;
 
-  bool ok = Firebase.RTDB.setBool(&fbdo, "/" BOOL_STATE_PATH, ledState);
-  if (!ok) {
-    Serial.printf("[RTDB] setBool %s: %s\n", BOOL_STATE_PATH, fbdo.errorReason().c_str());
-  } else {
-    Serial.printf("[RTDB] Published %s = %s\n", BOOL_STATE_PATH, ledState ? "true" : "false");
-  }
+  // /planta/
+  Firebase.RTDB.setFloat(&fbdo, "/planta/pv", planta.pv);
+  Firebase.RTDB.setFloat(&fbdo, "/planta/sp", planta.sp);
+  Firebase.RTDB.setFloat(&fbdo, "/planta/mv", planta.mv);
+  Firebase.RTDB.setFloat(&fbdo, "/planta/cv", planta.cv);
+  Firebase.RTDB.setFloat(&fbdo, "/planta/error", planta.error);
+  Firebase.RTDB.setString(&fbdo, "/planta/status", planta.status);
+
+  // /setpoint/
+  Firebase.RTDB.setFloat(&fbdo, "/setpoint/sp", setpoint.sp);
+
+  // /signal/
+  Firebase.RTDB.setBool(&fbdo, "/signal/bool", signal.boolState);
+  Firebase.RTDB.setBool(&fbdo, "/signal/bool_cmd", signal.boolCmd);
 }
 
 // Read desired state from RTDB (optional)
@@ -157,8 +225,15 @@ void loop() {
     connectWifi();
   }
 
-  publishStateIfDue();
-  pollCommandIfDue();
+
+  // Atualiza mocks
+  updateMockPlanta();
+  updateMockSetpoint();
+  updateMockSignal();
+
+  // Publica tudo
+  publishAllVarsIfDue();
+  // pollCommandIfDue(); // opcional: pode ser adaptado para ler comandos reais
 
   delay(10);
 }

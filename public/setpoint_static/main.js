@@ -1,8 +1,37 @@
+// Permite que o C# altere a fonte de dados dinamicamente
+window.onApproachChanged = function(approach) {
+  if (approach === "OpcUa") {
+    if (typeof startBridge === "function") startBridge();
+    setApproachIndicator("OPC UA");
+  } else if (approach === "Firebase") {
+    setApproachIndicator("Firebase");
+  } else {
+    if (typeof startMock === "function") startMock();
+    setApproachIndicator("Mock");
+  }
+};
+
+function setApproachIndicator(label) {
+  if (typeof els !== 'undefined' && els.sourceBox) els.sourceBox.textContent = label;
+}
+// Função global chamada pelo C# via ponte Vuplex
+window.onFirebaseUpdate = function(path, data) {
+  if (state.source !== 'bridge') return;
+  if (typeof data === "string") {
+    try { data = JSON.parse(data); } catch {}
+  }
+  if (path === "setpoint") {
+    // Espera-se que data.value seja um número
+    const n = Number(data.value);
+    if (Number.isFinite(n)) setValue(n);
+    setTime(data.t || Date.now());
+    if (!els.inputSp.value) els.inputSp.value = String(n);
+  }
+};
 (function(){
   // Static SetPoint page using JS ⇄ C# bridge (Vuplex). See bridge-messages.md.
   const els = {
-  btnBridge: document.getElementById('btnBridge'),
-    btnMock: document.getElementById('btnMock'),
+  // btnBridge e btnMock removidos: fonte de dados agora é controlada pelo StatusManager
     time: document.getElementById('time'),
     inputSp: document.getElementById('inputSp'),
     btnApply: document.getElementById('btnApply'),
@@ -23,8 +52,7 @@
   function setSending(s){ state.sending = s; els.btnApply.disabled = s || !canWrite(); }
   function canWrite(){ const n = Number(els.inputSp.value); return Number.isFinite(n); }
   function updateSource(){
-    els.sourceBox.textContent = state.source;
-    els.hint.textContent = state.source==='bridge' ? `Comunicando via ponte C# (key: ${els.cfgFirebasePath.value||'sp'})` : 'Mock';
+    // Não faz mais nada: fonte de dados é controlada externamente
   }
 
   function startMock(){
@@ -78,8 +106,7 @@
   // Wire
   els.inputSp.addEventListener('input', () => { els.btnApply.disabled = !canWrite(); });
   els.btnApply.addEventListener('click', apply);
-  els.btnMock.addEventListener('click', startMock);
-  els.btnBridge.addEventListener('click', startBridge);
+  // Removido: seleção de fonte de dados agora é feita pelo StatusManager
 
   // Defaults
   els.cfgFirebasePath.value = 'sp';
